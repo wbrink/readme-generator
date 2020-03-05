@@ -1,7 +1,17 @@
-const api = {
-  getUser(username) {
+const axios  = require("axios");
 
+const api = {
+  getData: function(username) {
+    return axios({
+      method: "get",
+      url: `https://api.github.com/users/${username}`,
+      headers: {"Accept": "application/vnd.github.v3+json"},
+    });
+    // .then((res) => {
+    //   return res.data;
+    // })
   }
-};
+}
+
 
 module.exports = api;
