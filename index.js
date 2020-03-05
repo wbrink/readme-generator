@@ -10,12 +10,14 @@ const questions = [
   {
     type: "input",
     message: "Title:  ",
-    name: "title"
+    name: "title",
+    default: "Title of Project"
   },
   {
     type: "input",
     message: "Description:  ",
-    name: "description"
+    name: "description",
+    default: "Place Description Here"
   },
   {
     type: "confirm",
@@ -51,7 +53,8 @@ const questions = [
       } else {
         return "Usage Section is too long.";
       }
-    }
+    },
+    default: "Place usage instructions here" 
   },
   {
     // index 45
@@ -218,17 +221,30 @@ function addContributorsQuestions(spliceStartNumber) {
 }
 
 function writeToFile(fileName, data) {
-  
+
 }
 
 function init() {
+  let promptAnswers;
+  let email;
+  let image;
   inquirer.prompt(questions)
     .then(function(answers) {
+      console.log(answers);
+      promptAnswers = answers;
       return api.getData(answers.githubUser);
     })
     .then((res) => {
-      console.log(res.data);
-    });
+      image = res.data.avatar_url;
+      email = res.data.email;
+      //console.log(res.data);
+      return generateMarkdown(res.data, promptAnswers);
+    })
+    .then(markdown => {
+      fs.writeFile("readmetest.md", markdown, (err) => {
+        if(err) throw err;
+      })
+    }) 
       
 }
 
