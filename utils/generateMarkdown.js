@@ -3,26 +3,19 @@ function that takes info from inquirer and axios call and makes markdown
 */
 function generateMarkdown(github_data, inquirerData) {
   let mdArray = []; // will join to string at end
+  let tableContents = []; // array that holds sections for table of contents
 
   // title section
   mdArray.push(`# ${inquirerData.title}`);
-  mdArray.push(`${inquirerData.description}`);
+  // description
+  mdArray.push(`\n${inquirerData.description}`);
   
-  // table of contents
-  if (inquirerData.tableOfContents){
-    mdArray.push(`## Table Of Contents`);
-
-    for (let i = 1; i<=20; i++) {
-      let section = inquirerData[`section${i}`];
-      if (section && section !== "") {
-        mdArray.push(`* ${section}`);
-      }
-    }
-  }
-
   // installation section
   if (inquirerData.installationSection){
     mdArray.push(`## Installation`);
+    mdArray.push("<a href='installation'></a>");
+    tableContents.push("* [Installation](#installation)");
+
 
     for (let i = 1; i<=20; i++) {
       let data = inquirerData[`installationStep${i}`];
@@ -36,6 +29,8 @@ function generateMarkdown(github_data, inquirerData) {
   }
 
   mdArray.push("## Usage");
+  mdArray.push("<a href='usage'></a>");
+  tableContents.push("* [Usage](#usage)");
   mdArray.push(`${inquirerData.usage}`);
 
   if (inquirerData.picturepath !== "") {
@@ -46,6 +41,8 @@ function generateMarkdown(github_data, inquirerData) {
   // at most 10 allowed
   if (inquirerData.contributorSection) {
     mdArray.push(`## Contributors`);
+    mdArray.push("<a href='contributors'></a>");
+    tableContents.push("* [Contributors](#contributors)");
     for (let i = 1; i<=10; i++) {
       let name = inquirerData[`contributor${i}Name`];
       let github = inquirerData[`contributor${i}Github`];
@@ -62,30 +59,61 @@ function generateMarkdown(github_data, inquirerData) {
 
   // license section
   mdArray.push("## License")
+  mdArray.push("<a href='license'></a>");
+  tableContents.push("* [License](#license)");
   mdArray.push(`This project is licensed under the ${inquirerData.license}`);
 
   // contributing section
   if (inquirerData.contributing !== "") {
     mdArray.push("## Contributing");
+    mdArray.push("<a href='contributing'></a>");
+    tableContents.push("* [Contributing](#contributing)");
     mdArray.push(`${inquirerData.contributing}`);
   }
 
   // Testing section
   if (inquirerData.testConfirmation) {
     mdArray.push("## Tests");
+    mdArray.push("<a href='tests'></a>");
+    tableContents.push("* [Tests](#tests)");
     mdArray.push(`${inquirerData.tests}`);
   }
 
   // questions section
   mdArray.push("## Questions");
-  mdArray.push(`Email: ${github_data.email}`);
+  mdArray.push("<a href='questions'></a>");
+  tableContents.push("* [Questions](#questions)");
+  mdArray.push(`Email: ${github_data.email}\n`);
   mdArray.push(`<img width="90px" height="90px" style="margin-right:40px" align="left" alt="my photo" src="${github_data.avatar_url}"/>`);
   
+  // table of contents
+  if (inquirerData.tableOfContents){
+    tableContents.unshift("## Table Of Contents"); // add title to the beginning of array
+    mdArray.splice(2,0, ...tableContents); // add contents to the mark down array
+  }
 
+  //if shields section
+  if (inquirerData.badgeConfirmation) {
+    let badges = [];
+    for (let i = 1; i <= 30; i++) {
+      let badgeLabel = inquirerData[`badgeLabel${i}`];
+      let badgeMessage = inquirerData[`badgeMessage${i}`];
+      let badgeLink = inquirerData[`badgeLink${i}`]; 
+
+      
+
+      if (badgeLabel && badgeMessage && badgeLabel !== "" && badgeMessage !== "") {
+        console.log(badgeLabel);
+        console.log(badgeMessage);
+        badges.push(`[![shield](https://img.shields.io/badge/${badgeLabel}-${badgeMessage}-blue)](${badgeLink})`);
+      }
+    }
+
+    mdArray.splice(1,0, ...badges);
+  }
   
-
   // join the array with two \n so that each section is on a new line
-  const markdown = mdArray.join("\n\n");
+  const markdown = mdArray.join("\n");
 
   return new Promise((resolve, reject) => {
     resolve(markdown);

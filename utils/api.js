@@ -7,9 +7,6 @@ const api = {
       url: `https://api.github.com/users/${username}`,
       headers: {"Accept": "application/vnd.github.v3+json"},
     });
-    // .then((res) => {
-    //   return res.data;
-    // })
   }
 }
 

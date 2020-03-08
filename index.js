@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-const axios = require("axios");
 const fs = require("fs");
 
 const api = require("./utils/api");
@@ -24,14 +23,8 @@ const questions = [
     message: "Table of Contents:  ",
     name: "tableOfContents"
   },
-  
-  // dynamically add questions with addtableofContentsQuestions()
-  // supports up to 20 sections
-  // when nothing is inputted then it will stop asking for sections
-  
-  
   {
-    //index 23
+    //index 3
     type: "confirm",
     message: "Installation Section : ",
     name: "installationSection"
@@ -43,7 +36,7 @@ const questions = [
   //index 2
   
   {
-    //index 44
+    //index 24
     type: "input",
     message: "Usage:  ",
     name: "usage",
@@ -57,14 +50,14 @@ const questions = [
     default: "Place usage instructions here" 
   },
   {
-    // index 45
+    // index 25
     type: "input",
     message: "Picture Path for usage:  ",
     name: "picturepath"
     // maybe check if file exists
   },
   {
-    // index 46
+    // index 26
     type: "confirm",
     message: "Other Contributors: ",
     name: "contributorSection"
@@ -72,7 +65,7 @@ const questions = [
   
 
   {
-    //index 57
+    //index 37
     type: "list",
     name: "license",
     choices: ["MIT License", "GNU AGPLv3", "GNU GPLv3", "Mozilla Public License 2.0", "Apache License 2.0", "Boost Software License 1.0", "The Unlicense" ]
@@ -102,53 +95,16 @@ const questions = [
     type: "input",
     name: "githubUser",
     Message: "What is your Github Username?  "
+  },
+  {
+    type: "confirm", 
+    message: "Would You like to add Badges?",
+    name: "badgeConfirmation"
   }
-
-  
 ];
 
-// function checkNumber(num) {
-//   return function(answers) {
-//     if (num <= answers.numberOfSections) {
-//       return true;
-//     } else {
-//       return false;
-//     }
-//   }
-// }
 
-// function adds 20 questions to questions array
-function addTableOfContentsQuestions(spliceStartNumber) {
-  let questionArray = [];
-
-  for (let i=1; i<=20; i++) {
-    let obj = {};
-    obj.type = "input";
-    obj.name = `section${i}`;
-    obj.message = `${i}:  `;
-
-    // if first table of content check if confirm table of contents
-    if (i==1) {
-      obj.when = function(answers) {
-        return answers.tableOfContents;
-      }
-    }
-    // check that a valid response was given if blank then they won't work 
-    else {
-      obj.when = function(answers) {
-        let lastIndex = i - 1;
-        return answers[`section${lastIndex}`]
-      }
-    }
-    
-    questionArray.push(obj);
-  }
-  // add in the questions to the inquirer question array
-  questions.splice(spliceStartNumber,0, ...questionArray);
-  
-} 
-
-
+// option to have up to 20 steps for installation if desired
 function addInstallationQuestions(spliceStartNumber) {
   let questionArray = [];
 
@@ -179,6 +135,7 @@ function addInstallationQuestions(spliceStartNumber) {
   
 }
 
+// function that adds option to have up to 10 contributors if contributor section is wanted
 function addContributorsQuestions(spliceStartNumber) {
   let questionArray = [];
   for (let i=1; i<=10; i++) {
@@ -220,14 +177,58 @@ function addContributorsQuestions(spliceStartNumber) {
   
 }
 
-function writeToFile(fileName, data) {
+function addBadgesQuestions(spliceStartNumber) {
+  for (let i = 1; i<=30; i++) {
 
+    // ask for badge label
+    obj = {};
+    obj.type = "input";
+    obj.message = "Label: ";
+    obj.name = `badgeLabel${i}`;
+
+    if (i==1) {
+      obj.when = (answers) => answers.badgeConfirmation;
+    } else {
+      // if the badge message is skipped on previous then don't run
+      obj.when = (answers) => answers[`badgeMessage${i - 1}`];
+    }
+
+    // ask for badge message
+    obj2 = {};
+    obj2.type = "input";
+    obj2.message = "Message: ";
+    obj2.name = `badgeMessage${i}`;
+    obj2.when = (answers) => answers[`badgeLabel${i}`];
+
+
+    // ask for badge message
+    obj3 = {};
+    obj3.type = "input";
+    obj3.message = "Link (Optional): ";
+    obj3.name = `badgeLink${i}`;
+    obj3.when = (answers) => answers[`badgeMessage${i}`];
+
+    questions.push(obj);
+    questions.push(obj2);
+    questions.push(obj3);
+
+  }
 }
 
+function writeFile(data) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile("README-Generated.md", data, (err) => {
+      if (err) reject(err);
+      console.log("readme file generated");
+      resolve("success");
+    })
+  })
+}
+
+// main 
 function init() {
   let promptAnswers;
-  let email;
-  let image;
+
   inquirer.prompt(questions)
     .then(function(answers) {
       console.log(answers);
@@ -235,22 +236,36 @@ function init() {
       return api.getData(answers.githubUser);
     })
     .then((res) => {
-      image = res.data.avatar_url;
-      email = res.data.email;
-      //console.log(res.data);
       return generateMarkdown(res.data, promptAnswers);
     })
     .then(markdown => {
-      fs.writeFile("readmetest.md", markdown, (err) => {
-        if(err) throw err;
+      return writeFile(markdown);
+    })
+    .catch(err => {
+      // if error occurred prompt to retry if no then end program
+      inquirer.prompt([
+        {
+          type: "confirm",
+          message: "An Error occurred fetching github user Try Again?: ",
+          name: "tryAgain"
+        }
+      ]).then((answers) => {
+        if (answers.tryAgain) {
+          init();
+        } 
       })
-    }) 
-      
+    })
+    .finally(() => {
+      console.log("Goodbye.")
+    });
+
+
 }
 
-addTableOfContentsQuestions(3); // add table of contents questions nothing asynchronous
-addInstallationQuestions(24);  // add instructino steps
-addContributorsQuestions(47);
+
+addInstallationQuestions(4);  // add instruction steps
+addContributorsQuestions(27); // add contributor steps
+addBadgesQuestions(questions.length);
 init();
 
 
