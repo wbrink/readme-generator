@@ -231,7 +231,7 @@ function init() {
 
   inquirer.prompt(questions)
     .then(function(answers) {
-      console.log(answers);
+      //console.log(answers);
       promptAnswers = answers;
       return api.getData(answers.githubUser);
     })

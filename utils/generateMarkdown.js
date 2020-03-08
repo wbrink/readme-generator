@@ -7,6 +7,25 @@ function generateMarkdown(github_data, inquirerData) {
 
   // title section
   mdArray.push(`# ${inquirerData.title}`);
+  let badges = [];
+
+  //if shields section
+  if (inquirerData.badgeConfirmation) {
+    for (let i = 1; i <= 30; i++) {
+      let badgeLabel = inquirerData[`badgeLabel${i}`];
+      let badgeMessage = inquirerData[`badgeMessage${i}`];
+      let badgeLink = inquirerData[`badgeLink${i}`]; 
+
+      
+
+      if (badgeLabel && badgeMessage && badgeLabel !== "" && badgeMessage !== "") {
+        badges.push(`[![shield](https://img.shields.io/badge/${badgeLabel}-${badgeMessage}-blue)](${badgeLink})`);
+      }
+    }
+
+    mdArray.splice(1,0, ...badges);
+  }
+
   // description
   mdArray.push(`\n${inquirerData.description}`);
   
@@ -89,27 +108,8 @@ function generateMarkdown(github_data, inquirerData) {
   // table of contents
   if (inquirerData.tableOfContents){
     tableContents.unshift("## Table Of Contents"); // add title to the beginning of array
-    mdArray.splice(2,0, ...tableContents); // add contents to the mark down array
-  }
-
-  //if shields section
-  if (inquirerData.badgeConfirmation) {
-    let badges = [];
-    for (let i = 1; i <= 30; i++) {
-      let badgeLabel = inquirerData[`badgeLabel${i}`];
-      let badgeMessage = inquirerData[`badgeMessage${i}`];
-      let badgeLink = inquirerData[`badgeLink${i}`]; 
-
-      
-
-      if (badgeLabel && badgeMessage && badgeLabel !== "" && badgeMessage !== "") {
-        console.log(badgeLabel);
-        console.log(badgeMessage);
-        badges.push(`[![shield](https://img.shields.io/badge/${badgeLabel}-${badgeMessage}-blue)](${badgeLink})`);
-      }
-    }
-
-    mdArray.splice(1,0, ...badges);
+    
+    mdArray.splice(badges.length+1 ,0, ...tableContents); // add contents to the mark down array
   }
   
   // join the array with two \n so that each section is on a new line
