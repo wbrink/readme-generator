@@ -19,6 +19,8 @@ function generateMarkdown(github_data, inquirerData) {
       
 
       if (badgeLabel && badgeMessage && badgeLabel !== "" && badgeMessage !== "") {
+        badgeLabel = badgeLabel.split(" ").join("");
+        badgeMessage = badgeMessage.split(" ").join("");
         badges.push(`[![shield](https://img.shields.io/badge/${badgeLabel}-${badgeMessage}-blue)](${badgeLink})`);
       }
     }
